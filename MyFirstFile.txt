@@ -1,1 +1,1 @@
-My first text. Vim test,fdsfdsfsd.
+My first text.
