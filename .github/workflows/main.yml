@@ -1,30 +1,40 @@
-# This is a basic workflow to help you get started with Actions
-
-name: CI
-
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the main branch
+name: Test-Build
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+    branches:
+      - main
 jobs:
-    newman:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@main
-            - uses: actions/setup-node@main
-              with:
-                node-version: '18'
-                collection: workflow.json
-                reporters: cli,htmlextra
-            - run: npm install -g newman
-            - run: npm install -g newman-reporter-htmlextra
-            - run: npm install -g newman-reporter-testrail
-            - run: newman run workflow.json  --reporters cli,htmlextra,testrail --reporter-htmlextra-export Report.html
-            - uses: actions/upload-artifact@main
-              with:
-                path: Report.html
+  test-api:
+    runs-on: ubuntu-latest
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+      
+    # INstall Node on the runner
+    - name: Install Node
+      uses: actions/setup-node@v1
+      with: 
+        node-version: '18.x'
+    
+    # Install the newman command line utility and also install the html extra reporter
+    - name: Install newman
+      run: |
+       npm install -g newman
+       npm install -g newman-reporter-html
+
+    # Make directory to upload the test results
+    - name: Make Directory for results
+      run: mkdir -p testResults
+
+
+    # Run the POSTMAN collection
+    - name: Run POSTMAN collection
+      run: |
+       newman run ./postman/collection.json -r html --reporter-html-export testResults/htmlreport.html
+
+    # Upload the contents of Test Results directory to workspace
+    - name: Output the run Details
+      uses: actions/upload-artifact@v2
+      with: 
+       name: RunReports
+       path: testResults
